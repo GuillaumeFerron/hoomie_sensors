@@ -1,19 +1,16 @@
 # Created by  Lisa Martini on 10/18/2017
 
 
-#!/usr/bin/python
-from multiprocessing import Process, Queue
-from signal import signal, SIGINT
-import subprocess
-import re
-import os, sys
 import json
+import os
 import platform
+import subprocess
+import sys
 import threading
-import pymongo
-import datetime
-from pymongo import MongoClient
+# !/usr/bin/python
+from signal import signal, SIGINT
 
+from pymongo import MongoClient
 
 global parser_process
 
