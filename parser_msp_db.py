@@ -54,20 +54,25 @@ class ParserProcess(threading.Thread):
             bin_path = os.path.join(dir_path, "ezconsole", "ezconsole")
 
         for line in self.execute(bin_path):
-            #print(line)
-            id = "10"
-            if "id" in line:
-                values = json.loads(line)
-                id = values["id"]
-                #print(id)
+            
+            
+            if "node id" in line : 
+            	pass
+            elif "id" in line :
+                if line :
+             		values = json.loads(line)
+            		id = values["id"]
+            		print(id)
             if "temperature" and "time" in line:
-                values = json.loads(line)
+            	values = json.loads(line)
                 temp = values["temperature"]
                 date = values["time"]
                 doc ={"sensorId": id, "date": date, "temperature": temp}
-                #print(doc)
                 doc_id = self.room.insert_one(doc).inserted_id
-                #print(doc_id)
+                
+           
+            
+            
 
 
 signal(SIGINT, interrupt)

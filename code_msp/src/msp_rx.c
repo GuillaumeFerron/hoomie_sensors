@@ -308,11 +308,12 @@ static PT_THREAD(thread_uart(struct pt *pt))
 
 static char radio_tx_buffer[PKTLEN]; //used as temperature buffer
 static char radio_rx_buffer[PKTLEN];
+static char own_buffer[PKTLEN];
 static int radio_rx_flag;
 
 void radio_cb(uint8_t *buffer, int size, int8_t rssi)
 {
-        if (size > 0)
+        if (size > 0 && periodic_write_flag ==1)
         {
             memcpy(radio_rx_buffer, buffer, PKTLEN);
             printhex(radio_rx_buffer,PKTLEN);
@@ -327,12 +328,13 @@ void radio_cb(uint8_t *buffer, int size, int8_t rssi)
     cc2500_rx_enter();
 }
 
-void ezdisplay(char message[])
+void ezdisplay( char message[])
 {
     char msproom=message[0]&0xFF;
     char mspsensor=message[1]&0xFF;
     int time=0;
-    printf("{\"id\" : \"%c%c\"\n",msproom,mspsensor);
+    
+    printf("{\"id\" : \"%c%c\"}\n",msproom,mspsensor);
     int i=3; //index 2 is the space charactere
     while( i < PKTLEN-1)
     {
@@ -344,7 +346,7 @@ void ezdisplay(char message[])
    	}
     	int temperature=converter(msptemperature1, msptemperature2);
     	time += TIMER_SENSING_TEMP;
-    	printf("\"temperature\" : \"%d,%d\", \"time\" : \"+%d\"}\n\r",temperature/10, temperature%10, time);
+    	printf("{\"temperature\" : \"%d,%d\", \"time\" : \"%d\"}\n",temperature/10, temperature%10, time*10);
     }
 }
 
@@ -372,22 +374,23 @@ static void init_message()
     unsigned int i;
     for(i = 0; i < PKTLEN; i++)
     {
-        radio_tx_buffer[i] = 0x00;
+        own_buffer[i] = 0x00;
     }
-    radio_tx_buffer[0] = (node_id>>8) &0xFF;
-    radio_tx_buffer[1] = node_id & 0xFF;
-    radio_tx_buffer[2] = 0x20;//hex code for SPACE char
+    own_buffer[0] = (node_id>>8) &0xFF;
+    own_buffer[1] = node_id & 0xFF;
+    own_buffer[2] = 0x20;//hex code for SPACE char
     current_buffer_pt = 3;
+    
 }
 
 
 static void write_message()
 {
     //finish the sending buffer with a dot 
-    radio_tx_buffer[current_buffer_pt] = 0x2E; //dot hex code
+    own_buffer[current_buffer_pt] = 0x2E; //dot hex code
     current_buffer_pt = 0;
     led_green_on();
-    ezdisplay(radio_tx_buffer);
+    ezdisplay(own_buffer);
     led_green_off();
    
 }
@@ -422,8 +425,8 @@ static void register_temperature()
     int temperature = adc10_sample_temp();
     /* msp430 is little endian, convert temperature to network order */
     char *pt = (char *) &temperature;    
-    radio_tx_buffer[current_buffer_pt++] = pt[1];
-    radio_tx_buffer[current_buffer_pt++] = pt[0];
+    own_buffer[current_buffer_pt++] = pt[1];
+    own_buffer[current_buffer_pt++] = pt[0];
     
 }
 
