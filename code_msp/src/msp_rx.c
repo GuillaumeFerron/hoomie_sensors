@@ -334,7 +334,7 @@ void ezdisplay( char message[])
     char mspsensor=message[1]&0xFF;
     int time=0;
     
-    printf("{\"id\" : \"%c%c\"}\n",msproom,mspsensor);
+    printf("id:%c%c,",msproom,mspsensor);
     int i=3; //index 2 is the space charactere
     while( i < PKTLEN-1)
     {
@@ -346,7 +346,7 @@ void ezdisplay( char message[])
    	}
     	int temperature=converter(msptemperature1, msptemperature2);
     	time += TIMER_SENSING_TEMP;
-    	printf("{\"temperature\" : \"%d,%d\", \"time\" : \"%d\"}\n",temperature/10, temperature%10, time*10);
+    	printf("temperature: %d.%d,time:%d\n",temperature/10, temperature%10, time*10);
     }
 }
 

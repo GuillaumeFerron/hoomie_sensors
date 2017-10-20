@@ -129,7 +129,7 @@ SYMBOL TABLE:
 0000002b g       *ABS*	00000000 __P2IFG
 0000001a g       *ABS*	00000000 __P3DIR
 00009004 g     F .text	0000001e CC2500_SPI_RX_FIFO_BYTE
-0000b162 g       *ABS*	00000000 _etext
+0000b14c g       *ABS*	00000000 _etext
 00000190 g       *ABS*	00000000 __TBR
 00009f02 g     F .text	00000038 Timer_A
 00009806 g     F .text	000000dc cc2500_init
@@ -180,7 +180,7 @@ SYMBOL TABLE:
 00008b22 g     F .text	00000032 adc10_calibrate
 00000063 g       *ABS*	00000000 __UCA0BR1
 0000af82 g     F .text	00000000 __umoddi3
-0000b162 g       *ABS*	00000000 __data_load_start
+0000b14c g       *ABS*	00000000 __data_load_start
 00009d3c g     F .text	00000016 leds_on
 00008116 g       .text	00000000 __dtors_end
 00000053 g       *ABS*	00000000 __BCSCTL3
@@ -309,7 +309,7 @@ SYMBOL TABLE:
 0000006e g       *ABS*	00000000 __UCB0RXBUF
 000001b0 g       *ABS*	00000000 __ADC10CTL0
 00008eb2 g     F .text	00000036 CC2500_SPI_ROREG
-0000b136 g     O .rodata	00000024 rfSettings_default_config
+0000b120 g     O .rodata	00000024 rfSettings_default_config
 00009f02 g       .text	00000000 __isr_9
 0000005e g       *ABS*	00000000 __UCA0IRTCTL
 000010fe g       *ABS*	00000000 __CALDCO_1MHZ
@@ -388,7 +388,7 @@ Disassembly of section .text:
     8018:	92 42 aa 02 	mov	&0x02aa,&0x0120	
     801c:	20 01 
     801e:	2f 83       	decd	r15		
-    8020:	9f 4f 62 b1 	mov	-20126(r15),512(r15);0xb162(r15), 0x0200(r15)
+    8020:	9f 4f 4c b1 	mov	-20148(r15),512(r15);0xb14c(r15), 0x0200(r15)
     8024:	00 02 
     8026:	f8 23       	jnz	$-14     	;abs 0x8018
 
@@ -1420,7 +1420,7 @@ void ezdisplay( char message[])
     int time=0;
     87ea:	84 43 ee ff 	mov	#0,	-18(r4)	;r3 As==00, 0xffee(r4)
     
-    printf("{\"id\" : \"%c%c\"}\n",msproom,mspsensor);
+    printf("id:%c%c,",msproom,mspsensor);
     87ee:	5e 44 f3 ff 	mov.b	-13(r4),r14	;0xfff3(r4)
     87f2:	8e 11       	sxt	r14		
     87f4:	5f 44 f2 ff 	mov.b	-14(r4),r15	;0xfff2(r4)
@@ -1474,7 +1474,7 @@ void ezdisplay( char message[])
     	time += TIMER_SENSING_TEMP;
     8872:	b4 50 64 00 	add	#100,	-18(r4)	;#0x0064, 0xffee(r4)
     8876:	ee ff 
-    	printf("{\"temperature\" : \"%d,%d\", \"time\" : \"%d\"}\n",temperature/10, temperature%10, time*10);
+    	printf("temperature: %d.%d,time:%d\n",temperature/10, temperature%10, time*10);
     8878:	1f 44 ee ff 	mov	-18(r4),r15	;0xffee(r4)
     887c:	0e 4f       	mov	r15,	r14	
     887e:	0f 4e       	mov	r14,	r15	
@@ -1495,13 +1495,13 @@ void ezdisplay( char message[])
     88a8:	0a 12       	push	r10		
     88aa:	0b 12       	push	r11		
     88ac:	0f 12       	push	r15		
-    88ae:	30 12 0b b1 	push	#-20213	;#0xb10b
+    88ae:	30 12 03 b1 	push	#-20221	;#0xb103
     88b2:	b0 12 82 a5 	call	#0xa582	
     88b6:	31 52       	add	#8,	r1	;r2 As==11
     char mspsensor=message[1]&0xFF;
     int time=0;
     
-    printf("{\"id\" : \"%c%c\"}\n",msproom,mspsensor);
+    printf("id:%c%c,",msproom,mspsensor);
     int i=3; //index 2 is the space charactere
     while( i < PKTLEN-1)
     88b8:	b4 90 1b 00 	cmp	#27,	-16(r4)	;#0x001b, 0xfff0(r4)
@@ -1510,7 +1510,7 @@ void ezdisplay( char message[])
    	}
     	int temperature=converter(msptemperature1, msptemperature2);
     	time += TIMER_SENSING_TEMP;
-    	printf("{\"temperature\" : \"%d,%d\", \"time\" : \"%d\"}\n",temperature/10, temperature%10, time*10);
+    	printf("temperature: %d.%d,time:%d\n",temperature/10, temperature%10, time*10);
     }
 }
     88c0:	31 50 0c 00 	add	#12,	r1	;#0x000c
@@ -3118,7 +3118,7 @@ static PT_THREAD(thread_periodic_temperature(struct pt *pt))
     98cc:	01 2c       	jc	$+4      	;abs 0x98d0
     98ce:	0f 43       	clr	r15		
     98d0:	b0 12 f4 97 	call	#0x97f4	
-    98d4:	3f 40 36 b1 	mov	#-20170,r15	;#0xb136
+    98d4:	3f 40 20 b1 	mov	#-20192,r15	;#0xb120
     98d8:	b0 12 ae 91 	call	#0x91ae	
     98dc:	21 53       	incd	r1		
     98de:	34 41       	pop	r4		
@@ -4983,7 +4983,7 @@ static PT_THREAD(thread_periodic_temperature(struct pt *pt))
     aa5c:	30 00 
     aa5e:	0e 93       	tst	r14		
     aa60:	02 20       	jnz	$+6      	;abs 0xaa66
-    aa62:	3e 40 5a b1 	mov	#-20134,r14	;#0xb15a
+    aa62:	3e 40 44 b1 	mov	#-20156,r14	;#0xb144
     aa66:	11 12 04 00 	push	4(r1)		;0x0004(r1)
     aa6a:	11 12 04 00 	push	4(r1)		;0x0004(r1)
     aa6e:	1d 41 34 00 	mov	52(r1),	r13	;0x0034(r1)

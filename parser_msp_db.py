@@ -7,6 +7,7 @@ import platform
 import subprocess
 import sys
 import threading
+import re
 # !/usr/bin/python
 from signal import signal, SIGINT
 
@@ -38,7 +39,7 @@ class ParserProcess(threading.Thread):
         return self.__stop__event.is_set()
 
     def execute(self, cmd):
-        popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+        popen = subprocess.Popen(['sudo',cmd], stdout=subprocess.PIPE, universal_newlines=True)
         for stdout_line in iter(popen.stdout.readline, ""):
             yield stdout_line
         popen.stdout.close()
@@ -53,24 +54,22 @@ class ParserProcess(threading.Thread):
         else:
             bin_path = os.path.join(dir_path, "ezconsole", "ezconsole")
 
-        for line in self.execute(bin_path):
-            
-            
+        for line in self.execute(bin_path):  
+                      
             if "node id" in line : 
             	pass
-            elif "id" in line :
-                if line :
-             		values = json.loads(line)
-            		id = values["id"]
-            		print(id)
-            if "temperature" and "time" in line:
-            	values = json.loads(line)
-                temp = values["temperature"]
-                date = values["time"]
-                doc ={"sensorId": id, "date": date, "temperature": temp}
-                doc_id = self.room.insert_one(doc).inserted_id
-                
-           
+            elif "id" and "temperature" and "time" in line :
+            	info = line.replace(',',':').replace('\n','').split(':')
+            	if info[0] == "id":
+            		id = info[1]
+            	if "time" in info :
+            		date = info[info.index("time")+1] 
+            	if "temperature" in info :
+            		temp = info[info.index("temperature")+1]
+            	doc ={"sensorId": id, "date": date, "temperature": temp}
+            	doc_id = self.room.insert_one(doc).inserted_id 
+               
+                         
             
             
 
