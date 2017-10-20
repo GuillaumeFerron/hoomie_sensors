@@ -66,6 +66,8 @@ class ParserProcess(threading.Thread):
             		date = info[info.index("time")+1] 
             	if "temperature" in info :
             		temp = info[info.index("temperature")+1]
+            	if not id:
+            		id = 10
             	doc ={"sensorId": id, "date": date, "temperature": temp}
             	doc_id = self.room.insert_one(doc).inserted_id 
                
