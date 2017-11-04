@@ -39,8 +39,9 @@
 
 /* 100 Hz timer A */
 #define TIMER_PERIOD_MS 10
-#define TIMER_SEND 1050
-#define TIMER_SENSING_TEMP 100 //10timer tick = 100ms so here its 100timer tick so 1sec
+#define TIMER_SEND 6001 // 10tick*60000ms/120ms =5000 ticks corresponding to 1 min  + 1 little difference 
+#define TIMER_SENSING_TEMP 600 //10timer tick = 120ms so here  temperature is measuring every 6sec =6000/TIMER_PERIOD_MS
+/*Issue it seems that the clock rate is not really accurate */
 
 #define PKTLEN 28
 #define MAX_HOPS 3

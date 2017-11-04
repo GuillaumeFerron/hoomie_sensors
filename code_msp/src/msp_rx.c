@@ -39,8 +39,8 @@
 
 /* 100 Hz timer A */
 #define TIMER_PERIOD_MS 10
-#define TIMER_SEND 1050
-#define TIMER_SENSING_TEMP 100 //10timer tick = 100ms so here its 100timer tick so 1sec
+#define TIMER_SEND 6001 // 10tick*60000ms/120ms =5000 ticks corresponding to 1 min  + 1 little difference 
+#define TIMER_SENSING_TEMP 600 //10timer tick = 120ms so here  temperature is measuring every 6sec =6000/TIMER_PERIOD_MS
 
 #define PKTLEN 28
 
@@ -332,7 +332,7 @@ void ezdisplay( char message[])
 {
     char msproom=message[0]&0xFF;
     char mspsensor=message[1]&0xFF;
-    int time=0;
+    unsigned int time=0;
     
     printf("id:%c%c,",msproom,mspsensor);
     int i=3; //index 2 is the space charactere
@@ -345,8 +345,8 @@ void ezdisplay( char message[])
    		break;
    	}
     	int temperature=converter(msptemperature1, msptemperature2);
-    	time += TIMER_SENSING_TEMP;
-    	printf("temperature: %d.%d,time:%d\n",temperature/10, temperature%10, time*10);
+    	time += TIMER_SENSING_TEMP*TIMER_PERIOD_MS; //TIMER_SENSING_TEMP*TIMER_PERIOD_MS to get the time in ms (cf driver)
+    	printf("temperature: %d.%d,time:%u\n",temperature/10, temperature%10, time);
     }
 }
 

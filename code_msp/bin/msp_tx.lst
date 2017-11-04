@@ -827,9 +827,9 @@ static PT_THREAD(thread_led_green(struct pt *pt))
     82ec:	d4 43 fa ff 	mov.b	#1,	-6(r4)	;r3 As==01, 0xfffa(r4)
     82f0:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
     82f4:	2f 4f       	mov	@r15,	r15	
-    82f6:	3f 90 c3 00 	cmp	#195,	r15	;#0x00c3
+    82f6:	3f 90 c4 00 	cmp	#196,	r15	;#0x00c4
     82fa:	0a 24       	jz	$+22     	;abs 0x8310
-    82fc:	3f 90 c7 00 	cmp	#199,	r15	;#0x00c7
+    82fc:	3f 90 c8 00 	cmp	#200,	r15	;#0x00c8
     8300:	16 24       	jz	$+46     	;abs 0x832e
     8302:	0f 93       	tst	r15		
     8304:	22 20       	jnz	$+70     	;abs 0x834a
@@ -838,7 +838,7 @@ static PT_THREAD(thread_led_green(struct pt *pt))
     {
         PT_WAIT_UNTIL(pt, led_green_flag);
     8306:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    830a:	bf 40 c3 00 	mov	#195,	0(r15)	;#0x00c3, 0x0000(r15)
+    830a:	bf 40 c4 00 	mov	#196,	0(r15)	;#0x00c4, 0x0000(r15)
     830e:	00 00 
     8310:	1f 42 12 02 	mov	&0x0212,r15	
     8314:	0f 93       	tst	r15		
@@ -851,7 +851,7 @@ static PT_THREAD(thread_led_green(struct pt *pt))
     8320:	82 43 04 02 	mov	#0,	&0x0204	;r3 As==00
         PT_WAIT_UNTIL(pt, timer_reached(TIMER_LED_GREEN_ON,
     8324:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    8328:	bf 40 c7 00 	mov	#199,	0(r15)	;#0x00c7, 0x0000(r15)
+    8328:	bf 40 c8 00 	mov	#200,	0(r15)	;#0x00c8, 0x0000(r15)
     832c:	00 00 
     832e:	1f 42 10 02 	mov	&0x0210,r15	
     8332:	0e 4f       	mov	r15,	r14	
@@ -890,16 +890,16 @@ static PT_THREAD(thread_led_red(struct pt *pt))
     836c:	d4 43 fa ff 	mov.b	#1,	-6(r4)	;r3 As==01, 0xfffa(r4)
     8370:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
     8374:	2f 4f       	mov	@r15,	r15	
-    8376:	3f 90 d3 00 	cmp	#211,	r15	;#0x00d3
+    8376:	3f 90 d4 00 	cmp	#212,	r15	;#0x00d4
     837a:	13 24       	jz	$+40     	;abs 0x83a2
-    837c:	3f 90 d4 00 	cmp	#212,	r15	;#0x00d4
+    837c:	3f 90 d5 00 	cmp	#213,	r15	;#0x00d5
     8380:	03 2c       	jc	$+8      	;abs 0x8388
     8382:	0f 93       	tst	r15		
     8384:	09 24       	jz	$+20     	;abs 0x8398
     8386:	3b 3c       	jmp	$+120    	;abs 0x83fe
-    8388:	3f 90 d7 00 	cmp	#215,	r15	;#0x00d7
+    8388:	3f 90 d8 00 	cmp	#216,	r15	;#0x00d8
     838c:	19 24       	jz	$+52     	;abs 0x83c0
-    838e:	3f 90 db 00 	cmp	#219,	r15	;#0x00db
+    838e:	3f 90 dc 00 	cmp	#220,	r15	;#0x00dc
     8392:	2a 24       	jz	$+86     	;abs 0x83e8
     8394:	34 3c       	jmp	$+106    	;abs 0x83fe
           led_red_duration));
@@ -916,7 +916,7 @@ static PT_THREAD(thread_led_red(struct pt *pt))
     {
         PT_WAIT_UNTIL(pt, led_red_flag);
     8398:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    839c:	bf 40 d3 00 	mov	#211,	0(r15)	;#0x00d3, 0x0000(r15)
+    839c:	bf 40 d4 00 	mov	#212,	0(r15)	;#0x00d4, 0x0000(r15)
     83a0:	00 00 
     83a2:	1f 42 16 02 	mov	&0x0216,r15	
     83a6:	0f 93       	tst	r15		
@@ -929,7 +929,7 @@ static PT_THREAD(thread_led_red(struct pt *pt))
     83b2:	82 43 02 02 	mov	#0,	&0x0202	;r3 As==00
         PT_WAIT_UNTIL(pt, timer_reached(TIMER_LED_RED_ON,
     83b6:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    83ba:	bf 40 d7 00 	mov	#215,	0(r15)	;#0x00d7, 0x0000(r15)
+    83ba:	bf 40 d8 00 	mov	#216,	0(r15)	;#0x00d8, 0x0000(r15)
     83be:	00 00 
     83c0:	1f 42 14 02 	mov	&0x0214,r15	
     83c4:	0e 4f       	mov	r15,	r14	
@@ -946,7 +946,7 @@ static PT_THREAD(thread_led_red(struct pt *pt))
     83da:	82 43 02 02 	mov	#0,	&0x0202	;r3 As==00
         PT_WAIT_UNTIL(pt, timer_reached(TIMER_LED_RED_ON,
     83de:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    83e2:	bf 40 db 00 	mov	#219,	0(r15)	;#0x00db, 0x0000(r15)
+    83e2:	bf 40 dc 00 	mov	#220,	0(r15)	;#0x00dc, 0x0000(r15)
     83e6:	00 00 
     83e8:	1f 42 14 02 	mov	&0x0214,r15	
     83ec:	0e 4f       	mov	r15,	r14	
@@ -1286,9 +1286,9 @@ static PT_THREAD(thread_uart(struct pt *pt))
     865a:	d4 43 fa ff 	mov.b	#1,	-6(r4)	;r3 As==01, 0xfffa(r4)
     865e:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
     8662:	2f 4f       	mov	@r15,	r15	
-    8664:	3f 90 6b 01 	cmp	#363,	r15	;#0x016b
+    8664:	3f 90 6c 01 	cmp	#364,	r15	;#0x016c
     8668:	0a 24       	jz	$+22     	;abs 0x867e
-    866a:	3f 90 6d 01 	cmp	#365,	r15	;#0x016d
+    866a:	3f 90 6e 01 	cmp	#366,	r15	;#0x016e
     866e:	14 24       	jz	$+42     	;abs 0x8698
     8670:	0f 93       	tst	r15		
     8672:	1f 20       	jnz	$+64     	;abs 0x86b2
@@ -1297,7 +1297,7 @@ static PT_THREAD(thread_uart(struct pt *pt))
     {
         PT_WAIT_UNTIL(pt, uart_flag==1);
     8674:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    8678:	bf 40 6b 01 	mov	#363,	0(r15)	;#0x016b, 0x0000(r15)
+    8678:	bf 40 6c 01 	mov	#364,	0(r15)	;#0x016c, 0x0000(r15)
     867c:	00 00 
     867e:	1f 42 60 02 	mov	&0x0260,r15	
     8682:	1f 93       	cmp	#1,	r15	;r3 As==01
@@ -1308,7 +1308,7 @@ static PT_THREAD(thread_uart(struct pt *pt))
     868a:	b0 12 d2 99 	call	#0x99d2	
         PT_WAIT_UNTIL(pt,uart_flag==0);
     868e:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    8692:	bf 40 6d 01 	mov	#365,	0(r15)	;#0x016d, 0x0000(r15)
+    8692:	bf 40 6e 01 	mov	#366,	0(r15)	;#0x016e, 0x0000(r15)
     8696:	00 00 
     8698:	1f 42 60 02 	mov	&0x0260,r15	
     869c:	0f 93       	tst	r15		
@@ -1346,9 +1346,9 @@ static PT_THREAD(thread_periodic_send(struct pt *pt))
     86d4:	d4 43 fa ff 	mov.b	#1,	-6(r4)	;r3 As==01, 0xfffa(r4)
     86d8:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
     86dc:	2f 4f       	mov	@r15,	r15	
-    86de:	3f 90 7b 01 	cmp	#379,	r15	;#0x017b
+    86de:	3f 90 7c 01 	cmp	#380,	r15	;#0x017c
     86e2:	0a 24       	jz	$+22     	;abs 0x86f8
-    86e4:	3f 90 7e 01 	cmp	#382,	r15	;#0x017e
+    86e4:	3f 90 7f 01 	cmp	#383,	r15	;#0x017f
     86e8:	16 24       	jz	$+46     	;abs 0x8716
     86ea:	0f 93       	tst	r15		
     86ec:	29 20       	jnz	$+84     	;abs 0x8740
@@ -1357,7 +1357,7 @@ static PT_THREAD(thread_periodic_send(struct pt *pt))
     {
         PT_WAIT_UNTIL(pt,periodic_send_flag==1);
     86ee:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    86f2:	bf 40 7b 01 	mov	#379,	0(r15)	;#0x017b, 0x0000(r15)
+    86f2:	bf 40 7c 01 	mov	#380,	0(r15)	;#0x017c, 0x0000(r15)
     86f6:	00 00 
     86f8:	1f 42 5a 02 	mov	&0x025a,r15	
     86fc:	1f 93       	cmp	#1,	r15	;r3 As==01
@@ -1370,13 +1370,13 @@ static PT_THREAD(thread_periodic_send(struct pt *pt))
     8708:	b0 12 72 81 	call	#0x8172	
         PT_WAIT_UNTIL(pt, node_id != NODE_ID_UNDEFINED && timer_reached( TIMER_RADIO_SEND, TIMER_SEND) && periodic_send_flag==1);
     870c:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    8710:	bf 40 7e 01 	mov	#382,	0(r15)	;#0x017e, 0x0000(r15)
+    8710:	bf 40 7f 01 	mov	#383,	0(r15)	;#0x017f, 0x0000(r15)
     8714:	00 00 
     8716:	1f 42 00 02 	mov	&0x0200,r15	
     871a:	0f 93       	tst	r15		
     871c:	0c 24       	jz	$+26     	;abs 0x8736
     871e:	1f 42 08 02 	mov	&0x0208,r15	
-    8722:	3e 40 1a 04 	mov	#1050,	r14	;#0x041a
+    8722:	3e 40 71 17 	mov	#6001,	r14	;#0x1771
     8726:	b0 12 86 82 	call	#0x8286	
     872a:	0f 93       	tst	r15		
     872c:	04 24       	jz	$+10     	;abs 0x8736
@@ -1414,9 +1414,9 @@ static PT_THREAD(thread_periodic_temperature(struct pt *pt))
     8762:	d4 43 fa ff 	mov.b	#1,	-6(r4)	;r3 As==01, 0xfffa(r4)
     8766:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
     876a:	2f 4f       	mov	@r15,	r15	
-    876c:	3f 90 8c 01 	cmp	#396,	r15	;#0x018c
+    876c:	3f 90 8d 01 	cmp	#397,	r15	;#0x018d
     8770:	0a 24       	jz	$+22     	;abs 0x8786
-    8772:	3f 90 8e 01 	cmp	#398,	r15	;#0x018e
+    8772:	3f 90 8f 01 	cmp	#399,	r15	;#0x018f
     8776:	14 24       	jz	$+42     	;abs 0x87a0
     8778:	0f 93       	tst	r15		
     877a:	27 20       	jnz	$+80     	;abs 0x87ca
@@ -1425,7 +1425,7 @@ static PT_THREAD(thread_periodic_temperature(struct pt *pt))
     {
         PT_WAIT_UNTIL(pt,periodic_temp_flag==1);
     877c:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    8780:	bf 40 8c 01 	mov	#396,	0(r15)	;#0x018c, 0x0000(r15)
+    8780:	bf 40 8d 01 	mov	#397,	0(r15)	;#0x018d, 0x0000(r15)
     8784:	00 00 
     8786:	1f 42 5c 02 	mov	&0x025c,r15	
     878a:	1f 93       	cmp	#1,	r15	;r3 As==01
@@ -1436,13 +1436,13 @@ static PT_THREAD(thread_periodic_temperature(struct pt *pt))
     8792:	82 43 0e 02 	mov	#0,	&0x020e	;r3 As==00
         PT_WAIT_UNTIL(pt, node_id != NODE_ID_UNDEFINED && timer_reached( TIMER_TEMP, TIMER_SENSING_TEMP) && periodic_temp_flag==1);
     8796:	1f 44 fc ff 	mov	-4(r4),	r15	;0xfffc(r4)
-    879a:	bf 40 8e 01 	mov	#398,	0(r15)	;#0x018e, 0x0000(r15)
+    879a:	bf 40 8f 01 	mov	#399,	0(r15)	;#0x018f, 0x0000(r15)
     879e:	00 00 
     87a0:	1f 42 00 02 	mov	&0x0200,r15	
     87a4:	0f 93       	tst	r15		
     87a6:	0c 24       	jz	$+26     	;abs 0x87c0
     87a8:	1f 42 0e 02 	mov	&0x020e,r15	
-    87ac:	3e 40 64 00 	mov	#100,	r14	;#0x0064
+    87ac:	3e 40 58 02 	mov	#600,	r14	;#0x0258
     87b0:	b0 12 86 82 	call	#0x8286	
     87b4:	0f 93       	tst	r15		
     87b6:	04 24       	jz	$+10     	;abs 0x87c0
