@@ -313,11 +313,14 @@ static int radio_rx_flag;
 
 void radio_cb(uint8_t *buffer, int size, int8_t rssi)
 {
+
+        //printf(" in the call back %c %c \n",buffer[0]&0xFF,buffer[1]&0xFF);
         if (size > 0 && periodic_write_flag ==1)
         {
             memcpy(radio_rx_buffer, buffer, PKTLEN);
             printhex(radio_rx_buffer,PKTLEN);
             radio_rx_flag = 1;
+
         }
         else
         {
