@@ -77,11 +77,12 @@ class ParserProcess(threading.Thread):
 		    		ms = int(info[info.index("time")+1])
 		    		delta = timedelta(milliseconds=ms) 
 		    		date = currentdate + delta
+		    		date = str(date).replace(" ","-").replace(":","-").split(".")[0]
 		    	if "temperature" in info :
 		    		temp = info[info.index("temperature")+1]
 		    	if not id:
 		    		id = 10
-		    	doc ={"sensorId": id, "date": str(date), "temperature": temp}
+		    	doc ={"sensorId": id, "date": date, "temperature": temp}
 		    	doc_id = self.room.insert_one(doc).inserted_id 
 		    	print "write in db succesful"
 	except (RuntimeError, TypeError, NameError, ValueError, IOError, errors.WriteError,errors.WriteConcernError) as e:
