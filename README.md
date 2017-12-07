@@ -1,7 +1,7 @@
 
 Hoomie Sensors code for arduino Uno and YUN :
-Any Added Libraires are accessible in librairies folder.
-Any code dedicated for the yun is accessible in yun folder.
+Any Added Libraires are accessible in librairies directory.
+Any code dedicated for the yun is accessible in yun directory.
 
 
 ______________________________________________________________________________________________________________________
