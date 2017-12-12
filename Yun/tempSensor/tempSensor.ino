@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #define ONE_WIRE_BUS 2
+#define SENDING_LED 4
 #define ROOM_NUMBER 205
 #define NB_MEASURE_PER_SEND 4
 #define DELAY 30000
@@ -23,6 +24,7 @@ void setup(void) {
 
   sensors.begin();
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(SENDING_LED,OUTPUT);
   Serial.begin(115200);
   Bridge.begin();
 
@@ -35,6 +37,8 @@ void setup(void) {
 }
 
 void loop(void) {
+
+  digitalWrite(SENDING_LED, LOW);
   
   int nb_measure = 0;
   String json="[";
@@ -59,6 +63,7 @@ void loop(void) {
   SerialUSB.println(json_to_send);
   
   if(!sendData.running()){
+    digitalWrite(SENDING_LED,HIGH);
     sendData.begin("curl");
     sendData.addParameter("-X");
     sendData.addParameter("POST");
@@ -70,7 +75,7 @@ void loop(void) {
     SerialUSB.println("sent");
     sendData.run();
   }
-  
+ // delay(500);
 
 }
 
