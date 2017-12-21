@@ -88,10 +88,13 @@ void loop()
 
 void receive(String b) {
   
-  String json= verif(b) ;
-  Serial.println(json);
-  Serial.println(json.length());
-  Serial.println(json.charAt(107));
+  String json = "{\"data\":"+verif(b) ;
+  
+  
+  if(json.length() > 2){
+    json += ",";
+  }
+  //Serial.println(json);
   // Make a HTTP request:
     digitalWrite(MEASURE_LED, HIGH);
     String tempDoc = measureTemp();
@@ -100,10 +103,10 @@ void receive(String b) {
     Serial.flush();
     digitalWrite(MEASURE_LED, LOW);
     
-  json += "]";
+  json += "]}";
+  Serial.println(json);
+  Serial.println(json.length());
   
-  String json_to_send = "{\"data\":"+json+"}";
-  Serial.println(json_to_send);
   
   /*if(!sendData.running()){
     digitalWrite(SENDING_LED,HIGH);
@@ -125,9 +128,53 @@ void receive(String b) {
 }
 
 String verif(String s){
+  String firstData = getValue(s,';',0);
+  String secondData = getValue(s,';',1);
+  /*Serial.println(firstData);
+  Serial.println(secondData);*/
+  String res = "[";
+  if(firstData.length() == 53){
+    res += firstData+",";
+  }
+  int len = secondData.length();
+  switch(len){
+    case 53 :
+      res += secondData;
+      break;
+    case 52 :
+      if( secondData.charAt(51) != '}'){
+        res += secondData+"}";
+      }else{
+        Serial.println(secondData);
+      }
+      break;
+    default:
+      if(firstData.length() == 53){
+        res = "["+firstData;
+      }else{
+        res ="[";
+      }
+  }
   
+  return res; 
+ 
 }
 
+String getValue(String data, char separator, int index)
+{
+    int found = 0;
+    int strIndex[] = { 0, -1 };
+    int maxIndex = data.length() - 1;
+
+    for (int i = 0; i <= maxIndex && found <= index; i++) {
+        if (data.charAt(i) == separator || i == maxIndex) {
+            found++;
+            strIndex[0] = strIndex[1] + 1;
+            strIndex[1] = (i == maxIndex) ? i+1 : i;
+        }
+    }
+    return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
 
 String measureTemp(){
   String tempInfo,dateVal;

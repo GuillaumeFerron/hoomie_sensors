@@ -76,13 +76,13 @@ void setup(void) {
 void loop(void) {
   
    int nb_measure = 0;
-  String json="[";
+  String json;
   // Make a HTTP request:
   while( nb_measure < NB_MEASURE_PER_SEND ){
     digitalWrite(MEASURE_LED, HIGH);
     String tempDoc = measureTemp();
     Serial.println(tempDoc);
-    json += tempDoc+",";
+    json += tempDoc+";";
     Serial.flush();
     digitalWrite(MEASURE_LED, LOW);
     if(nb_measure != NB_MEASURE_PER_SEND-1){
@@ -93,8 +93,8 @@ void loop(void) {
   }
   
   //json = "{\"data\":"+json+"}";
-  uint8_t json_to_send[110];
-  json.toCharArray(json_to_send,110);
+  uint8_t json_to_send[108];
+  json.toCharArray(json_to_send,108);
  // Serial.println(json_to_send);
  
  rf95.send(json_to_send,sizeof(json_to_send));
@@ -181,7 +181,7 @@ void processSyncMessage() {
      String buffer = String((char*)buf).substring(1);
      Serial.println(buffer);
      
-     pctime = buffer.toInt();
+     pctime = buffer.toInt()+3600;//to local time
      if( pctime >= DEFAULT_TIME) { // check the integer is a valid time (greater than Dec 18 2017)
        setTime(pctime); // Sync Arduino clock to the time received on the serial port
        Serial.println("setting time");
