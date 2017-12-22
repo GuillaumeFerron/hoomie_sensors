@@ -16,7 +16,7 @@
 #define LORA_RX 6
 
 #define ROOM_NUMBER 204
-#define NB_MEASURE_PER_SEND 1
+#define NB_MEASURE_PER_SEND 2
 #define DELAY 20000 //1 min 
 #define TIME_HEADER  'T'   // Header tag for serial time sync message
 #define TIME_REQUEST "req"  
@@ -76,15 +76,17 @@ void setup(void) {
 }
 
 void loop(void) {
+
+  StaticJsonBuffer<250> jsonBuffer;
+  JsonObject& json_obj = jsonBuffer.createObject();
+  JsonArray& json = json_obj.createNestedArray("data");
   
    int nb_measure = 0;
-  String json;
+  
   // Make a HTTP request:
   while( nb_measure < NB_MEASURE_PER_SEND ){
     digitalWrite(MEASURE_LED, HIGH);
-    String tempDoc = measureTemp();
-    Serial.println(tempDoc);
-    json += tempDoc+";";
+    json.add(measureTemp());
     Serial.flush();
     digitalWrite(MEASURE_LED, LOW);
     if(nb_measure != NB_MEASURE_PER_SEND-1){
@@ -94,12 +96,10 @@ void loop(void) {
     nb_measure +=1;
   }
   
-  //json = "{\"data\":"+json+"}";
-  uint8_t json_to_send[56];
-  json.toCharArray(json_to_send,56);
- // Serial.println(json_to_send);
+ char json_to_send[60];
+ json_obj.printTo(json_to_send);
  
- rf95.send(json_to_send,sizeof(json_to_send));
+ rf95.send((uint8_t*)json_to_send,sizeof(json_to_send));
  rf95.waitPacketSent();
  digitalWrite(SENDING_LED,HIGH);
     
@@ -142,8 +142,15 @@ void radio_error(){
      }
 }
 
-String measureTemp(){
-  String tempInfo;
+JsonObject& measureTemp(){
+  StaticJsonBuffer<60> jsonBuffer;
+  JsonObject& tempInfo = jsonBuffer.createObject();
+  //date 
+  time_t t = now();
+  String date= checkDigit(year())+'-'+checkDigit(month())+'-'+checkDigit(day())+'-'+checkDigit(hour())+'-'+checkDigit(minute())+'-'+checkDigit(second());
+  tempInfo["date"] = date;
+  
+  //temperature 
   sensors.requestTemperatures();
   char tempVal[5];
   dtostrf(sensors.getTempCByIndex(0),5,2,tempVal);
@@ -151,12 +158,11 @@ String measureTemp(){
   for (int i=0;i<5;i++){
     tempValString += tempVal[i];
   }
-  time_t t = now();
-  
-  String date= checkDigit(year())+'-'+checkDigit(month())+'-'+checkDigit(day())+'-'+checkDigit(hour())+'-'+checkDigit(minute())+'-'+checkDigit(second());
-    
-  tempInfo +=  "{\"date\":\""+date+"\",\"value\":"+tempValString+",\"room\":"+room+"}";
-  Serial.println(tempInfo.length());
+  tempInfo["value"] = tempValString;
+  tempInfo["room"] = room;
+ 
+  tempInfo.printTo(Serial);
+  //char  jsonSerialize[];
   return tempInfo;
   
 }

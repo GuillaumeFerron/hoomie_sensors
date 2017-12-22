@@ -1,3 +1,5 @@
+#include <ArduinoJson.h>
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Bridge.h>
@@ -75,7 +77,7 @@ void loop()
           uint8_t data[]="ok" ;
           rf95.send(data, sizeof(data));
           rf95.waitPacketSent();
-          receive(String((char*)buf));
+          receive((char*)buf);
        }   
         digitalWrite(LED_BUILTIN, LOW);
     }
@@ -86,29 +88,27 @@ void loop()
   }
 }
 
-void receive(String b) {
+void receive(char b[]) {
 
-  String recep = verif(b);
-  String json[2];
-  json[0]= recep ;
-  
-  
-  /*if(recep.length() > 2){
-    json += ',';
-  }*/
-  //Serial.println(json);
-  // Make a HTTP request:
+  StaticJsonBuffer<250> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(b);
+  if(!root.success()) {
+    Serial.println("error while parsing LoRa msg"); 
+  }else {
+    JsonArray& json = root["data"];
     digitalWrite(MEASURE_LED, HIGH);
-    String tempDoc = measureTemp();
-    Serial.println(tempDoc);
-    json[1]= tempDoc;
+    json.add(measureTemp());
     Serial.flush();
     digitalWrite(MEASURE_LED, LOW);
-    
-  String json_to_send = "{\"data\":["+json[0]+','+json[1]+"]}";
-  Serial.println(json_to_send);
-
+  }
+ 
   
+  // Make a HTTP request:
+    
+  char json_to_send[250];
+  root.printTo(json_to_send);
+  Serial.println(String(json_to_send));
+  /*
     if(!sendData.running()){
       digitalWrite(SENDING_LED,HIGH);
       sendData.begin("curl");
@@ -125,7 +125,7 @@ void receive(String b) {
       digitalWrite(SENDING_LED, LOW);
     }
 
-  
+  */
   
   
 
