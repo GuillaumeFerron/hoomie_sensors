@@ -87,73 +87,71 @@ void loop()
 }
 
 void receive(String b) {
+
+  String recep = verif(b);
+  String json[2];
+  json[0]= recep ;
   
-  String json = "{\"data\":"+verif(b) ;
   
-  
-  if(json.length() > 2){
-    json += ",";
-  }
+  /*if(recep.length() > 2){
+    json += ',';
+  }*/
   //Serial.println(json);
   // Make a HTTP request:
     digitalWrite(MEASURE_LED, HIGH);
     String tempDoc = measureTemp();
     Serial.println(tempDoc);
-    json += tempDoc;
+    json[1]= tempDoc;
     Serial.flush();
     digitalWrite(MEASURE_LED, LOW);
     
-  json += "]}";
-  Serial.println(json);
-  Serial.println(json.length());
+  String json_to_send = "{\"data\":["+json[0]+','+json[1]+"]}";
+  Serial.println(json_to_send);
+
+  
+    if(!sendData.running()){
+      digitalWrite(SENDING_LED,HIGH);
+      sendData.begin("curl");
+      sendData.addParameter("-X");
+      sendData.addParameter("POST");
+      sendData.addParameter("http://hoomieserver.herokuapp.com/temperature/addDoc");
+      sendData.addParameter("-H");
+      sendData.addParameter("Content-Type:application/json");
+      sendData.addParameter("--data-binary");
+      sendData.addParameter(json_to_send);
+      Serial.println("sent");
+      sendData.run();
+      delay(500);
+      digitalWrite(SENDING_LED, LOW);
+    }
+
   
   
-  /*if(!sendData.running()){
-    digitalWrite(SENDING_LED,HIGH);
-    sendData.begin("curl");
-    sendData.addParameter("-X");
-    sendData.addParameter("POST");
-    sendData.addParameter("http://hoomieserver.herokuapp.com/temperature/addDoc");
-    sendData.addParameter("-H");
-    sendData.addParameter("Content-Type:application/json");
-    sendData.addParameter("--data-binary");
-    sendData.addParameter(json_to_send);
-    Serial.println("sent");
-    sendData.run();
-    delay(500);
-    digitalWrite(SENDING_LED, LOW);
-  }*/
- // delay(500);
+  
 
 }
 
 String verif(String s){
   String firstData = getValue(s,';',0);
-  String secondData = getValue(s,';',1);
-  /*Serial.println(firstData);
+ /*String secondData = getValue(s,';',1);
+  Serial.println(firstData);
   Serial.println(secondData);*/
-  String res = "[";
-  if(firstData.length() == 53){
-    res += firstData+",";
-  }
-  int len = secondData.length();
+  String res = "" ;
+  
+  int len = firstData.length();
   switch(len){
-    case 53 :
-      res += secondData;
+    case 55 :
+      res = firstData;
       break;
-    case 52 :
-      if( secondData.charAt(51) != '}'){
-        res += secondData+"}";
+    case 54 :
+      if( firstData.charAt(53) != '}'){
+        res += firstData+"}";
       }else{
-        Serial.println(secondData);
+        Serial.println(firstData);
       }
       break;
     default:
-      if(firstData.length() == 53){
-        res = "["+firstData;
-      }else{
-        res ="[";
-      }
+      Serial.println("error");
   }
   
   return res; 

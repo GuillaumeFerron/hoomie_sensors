@@ -1,3 +1,5 @@
+#include <ArduinoJson.h>
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
@@ -14,7 +16,7 @@
 #define LORA_RX 6
 
 #define ROOM_NUMBER 204
-#define NB_MEASURE_PER_SEND 2
+#define NB_MEASURE_PER_SEND 1
 #define DELAY 20000 //1 min 
 #define TIME_HEADER  'T'   // Header tag for serial time sync message
 #define TIME_REQUEST "req"  
@@ -93,8 +95,8 @@ void loop(void) {
   }
   
   //json = "{\"data\":"+json+"}";
-  uint8_t json_to_send[108];
-  json.toCharArray(json_to_send,108);
+  uint8_t json_to_send[56];
+  json.toCharArray(json_to_send,56);
  // Serial.println(json_to_send);
  
  rf95.send(json_to_send,sizeof(json_to_send));
@@ -153,8 +155,8 @@ String measureTemp(){
   
   String date= checkDigit(year())+'-'+checkDigit(month())+'-'+checkDigit(day())+'-'+checkDigit(hour())+'-'+checkDigit(minute())+'-'+checkDigit(second());
     
-  tempInfo +=  "{\"date\":"+date+",\"value\":"+tempValString+",\"room\":"+room+"}";
-  
+  tempInfo +=  "{\"date\":\""+date+"\",\"value\":"+tempValString+",\"room\":"+room+"}";
+  Serial.println(tempInfo.length());
   return tempInfo;
   
 }
