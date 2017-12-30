@@ -1,4 +1,4 @@
-#include <ArduinoJson.h>
+//#include <ArduinoJson.h>
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -16,7 +16,7 @@
 #define LORA_RX 6
 
 #define ROOM_NUMBER 204
-#define NB_MEASURE_PER_SEND 2
+#define NB_MEASURE_PER_SEND 5 //careful need to change size of json_to_send depending on nb measure
 #define DELAY 20000 //1 min 
 #define TIME_HEADER  'T'   // Header tag for serial time sync message
 #define TIME_REQUEST "req"  
@@ -76,17 +76,15 @@ void setup(void) {
 }
 
 void loop(void) {
-
-  StaticJsonBuffer<250> jsonBuffer;
-  JsonObject& json_obj = jsonBuffer.createObject();
-  JsonArray& json = json_obj.createNestedArray("data");
-  
+   int json_size = 3+NB_MEASURE_PER_SEND*(17);
+   char json_to_send[json_size]; //size = 3+nb_measure*(16+1)+1 or 2 more
+   sprintf(json_to_send,"%d",room);
    int nb_measure = 0;
   
   // Make a HTTP request:
   while( nb_measure < NB_MEASURE_PER_SEND ){
     digitalWrite(MEASURE_LED, HIGH);
-    json.add(measureTemp());
+    sprintf(json_to_send,"%s-%s",json_to_send,measureTemp());
     Serial.flush();
     digitalWrite(MEASURE_LED, LOW);
     if(nb_measure != NB_MEASURE_PER_SEND-1){
@@ -96,9 +94,7 @@ void loop(void) {
     nb_measure +=1;
   }
   
- char json_to_send[60];
- json_obj.printTo(json_to_send);
- 
+ Serial.println(String(json_to_send));
  rf95.send((uint8_t*)json_to_send,sizeof(json_to_send));
  rf95.waitPacketSent();
  digitalWrite(SENDING_LED,HIGH);
@@ -142,27 +138,17 @@ void radio_error(){
      }
 }
 
-JsonObject& measureTemp(){
-  StaticJsonBuffer<60> jsonBuffer;
-  JsonObject& tempInfo = jsonBuffer.createObject();
+char* measureTemp(){
+  char tempInfo[16]; 
   //date 
-  time_t t = now();
-  String date= checkDigit(year())+'-'+checkDigit(month())+'-'+checkDigit(day())+'-'+checkDigit(hour())+'-'+checkDigit(minute())+'-'+checkDigit(second());
-  tempInfo["date"] = date;
-  
+  time_t t = now(); 
+  Serial.println(t);
   //temperature 
   sensors.requestTemperatures();
   char tempVal[5];
   dtostrf(sensors.getTempCByIndex(0),5,2,tempVal);
-  String tempValString ;
-  for (int i=0;i<5;i++){
-    tempValString += tempVal[i];
-  }
-  tempInfo["value"] = tempValString;
-  tempInfo["room"] = room;
- 
-  tempInfo.printTo(Serial);
-  //char  jsonSerialize[];
+  int n = sprintf(tempInfo,"%ld-%s",(long)t,tempVal);
+  Serial.println(n);
   return tempInfo;
   
 }
@@ -189,7 +175,7 @@ void processSyncMessage() {
      String buffer = String((char*)buf).substring(1);
      Serial.println(buffer);
      
-     pctime = buffer.toInt()+3600;//to local time
+     pctime = buffer.toInt();
      if( pctime >= DEFAULT_TIME) { // check the integer is a valid time (greater than Dec 18 2017)
        setTime(pctime); // Sync Arduino clock to the time received on the serial port
        Serial.println("setting time");

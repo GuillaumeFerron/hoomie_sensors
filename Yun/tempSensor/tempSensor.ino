@@ -57,8 +57,9 @@ void loop()
   if(rf95.available())
   {
     // Should be a message for us now   
-    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t buf[90];
     uint8_t len = sizeof(buf);
+    memset(buf,char(0),len);
     //Serial.print(len);
     if(rf95.recv(buf, &len))
     {
@@ -73,10 +74,11 @@ void loop()
           rf95.send(data, sizeof(data));
           rf95.waitPacketSent();
         }else{          
-          Serial.println("Sending a reply");
+          
           uint8_t data[]="ok" ;
           rf95.send(data, sizeof(data));
           rf95.waitPacketSent();
+          Serial.println("Sending a reply");
           receive((char*)buf);
        }   
         digitalWrite(LED_BUILTIN, LOW);
@@ -91,16 +93,25 @@ void loop()
 void receive(char b[]) {
 
   StaticJsonBuffer<250> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(b);
-  if(!root.success()) {
-    Serial.println("error while parsing LoRa msg"); 
-  }else {
-    JsonArray& json = root["data"];
-    digitalWrite(MEASURE_LED, HIGH);
-    json.add(measureTemp());
-    Serial.flush();
-    digitalWrite(MEASURE_LED, LOW);
+  JsonObject& root = jsonBuffer.createObject();
+  
+  JsonArray& json = root["data"];
+  
+  char* ws[11];
+  int index = 0 ;
+  char* split = strtok(b,"-");
+  while(split != NULL){
+    ws[index]=split;
+    index += 1;
+    split = strtok(NULL,"-");
   }
+  
+  
+  digitalWrite(MEASURE_LED, HIGH);
+  json.add(measureTemp());
+  Serial.flush();
+  digitalWrite(MEASURE_LED, LOW);
+  
  
   
   // Make a HTTP request:
@@ -131,51 +142,16 @@ void receive(char b[]) {
 
 }
 
-String verif(String s){
-  String firstData = getValue(s,';',0);
- /*String secondData = getValue(s,';',1);
-  Serial.println(firstData);
-  Serial.println(secondData);*/
-  String res = "" ;
+String formJson(int room,long epoch,float value){
   
-  int len = firstData.length();
-  switch(len){
-    case 55 :
-      res = firstData;
-      break;
-    case 54 :
-      if( firstData.charAt(53) != '}'){
-        res += firstData+"}";
-      }else{
-        Serial.println(firstData);
-      }
-      break;
-    default:
-      Serial.println("error");
-  }
-  
-  return res; 
  
 }
 
-String getValue(String data, char separator, int index)
-{
-    int found = 0;
-    int strIndex[] = { 0, -1 };
-    int maxIndex = data.length() - 1;
 
-    for (int i = 0; i <= maxIndex && found <= index; i++) {
-        if (data.charAt(i) == separator || i == maxIndex) {
-            found++;
-            strIndex[0] = strIndex[1] + 1;
-            strIndex[1] = (i == maxIndex) ? i+1 : i;
-        }
-    }
-    return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
-}
-
-String measureTemp(){
-  String tempInfo,dateVal;
+JsonObject& measureTemp(){
+  StaticJsonBuffer<60> jsonBuffer;
+  JsonObject& tempInfo = jsonBuffer.createObject();
+  String dateVal;
 
   date.runShellCommand("echo `date +%Y-%m-%d-%H-%M-%S`");
   // do nothing until the process finishes, so you get the whole output:
@@ -187,7 +163,7 @@ String measureTemp(){
     if(c!='\n') dateVal += c;
   }
   
-  tempInfo = "{\"date\":\""+dateVal+"\",";
+  tempInfo["date"] = dateVal;
   sensors.requestTemperatures();
   char tempVal[5];
   dtostrf(sensors.getTempCByIndex(0),5,2,tempVal);
@@ -195,8 +171,9 @@ String measureTemp(){
   for (int i=0;i<5;i++){
     tempValString += tempVal[i];
   }
-  tempInfo +=  "\"value\":"+tempValString+",\"room\":"+room+"}";
-  
+  tempInfo["value"] = tempValString;
+  tempInfo["room"] = room;
+  tempInfo.printTo(Serial);
   return tempInfo;
   
 }
