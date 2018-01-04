@@ -1,3 +1,6 @@
+#include <Time.h>
+#include <TimeLib.h>
+
 #include <ArduinoJson.h>
 
 #include <OneWire.h>
@@ -14,7 +17,8 @@
 #define SENDING_LED 4
 #define MEASURE_LED 3
 #define ROOM_NUMBER 205
-#define NB_MEASURE_PER_SEND 4
+#define NB_MEASURE_PER_SEND 2
+#define LOCAL_TIME_DIFFERENCE 3600
 #define DELAY 30000
 #define TIME_HEADER  'T'   // Header tag for serial time sync message
 #define TIME_REQUEST "req"
@@ -94,10 +98,10 @@ void receive(char b[]) {
 
   StaticJsonBuffer<250> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
+  JsonArray& json = root.createNestedArray("data");
   
-  JsonArray& json = root["data"];
-  
-  char* ws[11];
+  int buffsize = 1+NB_MEASURE_PER_SEND*2; //room + NB_MEASURE_PER_SEND*(time+val)
+  char* ws[buffsize];
   int index = 0 ;
   char* split = strtok(b,"-");
   while(split != NULL){
@@ -105,20 +109,34 @@ void receive(char b[]) {
     index += 1;
     split = strtok(NULL,"-");
   }
+
+
+  
+  int roomRcv = atoi(ws[0]);
+  long etime = 0;
+  for(int i=1;i<buffsize;i++){
+    if( i % 2 == 1 && strlen(ws[i]) == 10){
+      etime = atol(ws[i])+ LOCAL_TIME_DIFFERENCE;//for local time    
+    }
+    if( i % 2 == 0 && etime != 0 && strlen(ws[i]) == 5){
+      JsonObject& obj = json.createNestedObject();
+      formJson(obj,roomRcv,etime,ws[i]);
+      
+      etime = 0;
+    }
+  }
   
   
   digitalWrite(MEASURE_LED, HIGH);
-  json.add(measureTemp());
-  Serial.flush();
-  digitalWrite(MEASURE_LED, LOW);
-  
+  JsonObject& ownObj = json.createNestedObject();
+  measureTemp(ownObj);
  
-  
+  digitalWrite(MEASURE_LED, LOW);
+   
   // Make a HTTP request:
-    
-  char json_to_send[250];
-  root.printTo(json_to_send);
-  Serial.println(String(json_to_send));
+  Serial.println();
+  root.printTo(Serial);
+  Serial.flush();
   /*
     if(!sendData.running()){
       digitalWrite(SENDING_LED,HIGH);
@@ -142,15 +160,17 @@ void receive(char b[]) {
 
 }
 
-String formJson(int room,long epoch,float value){
-  
+void formJson(JsonObject& info,int room,long epoch,char* value){
+  time_t t = (time_t) epoch;
+  String date= checkDigit(year(t))+'-'+checkDigit(month(t))+'-'+checkDigit(day(t))+'-'+checkDigit(hour(t))+'-'+checkDigit(minute(t))+'-'+checkDigit(second(t));
+  info["date"] = date;
+  info["value"] = atof(value);
+  info["room"] = room;
  
 }
 
 
-JsonObject& measureTemp(){
-  StaticJsonBuffer<60> jsonBuffer;
-  JsonObject& tempInfo = jsonBuffer.createObject();
+void measureTemp(JsonObject& tempInfo){
   String dateVal;
 
   date.runShellCommand("echo `date +%Y-%m-%d-%H-%M-%S`");
@@ -165,19 +185,19 @@ JsonObject& measureTemp(){
   
   tempInfo["date"] = dateVal;
   sensors.requestTemperatures();
-  char tempVal[5];
-  dtostrf(sensors.getTempCByIndex(0),5,2,tempVal);
-  String tempValString ;
-  for (int i=0;i<5;i++){
-    tempValString += tempVal[i];
-  }
-  tempInfo["value"] = tempValString;
+  tempInfo["value"] = round(sensors.getTempCByIndex(0)*100)/100;
   tempInfo["room"] = room;
-  tempInfo.printTo(Serial);
-  return tempInfo;
+  
   
 }
 
+String checkDigit(int d){
+  String s;
+  if(d < 10)
+    s = "0";
+  return s+String(d);
+  
+}
 
 String  getTimeNow(){
   Serial.println("getting date");

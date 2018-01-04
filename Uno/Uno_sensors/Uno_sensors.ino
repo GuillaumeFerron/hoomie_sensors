@@ -16,7 +16,7 @@
 #define LORA_RX 6
 
 #define ROOM_NUMBER 204
-#define NB_MEASURE_PER_SEND 5 //careful need to change size of json_to_send depending on nb measure
+#define NB_MEASURE_PER_SEND 2 //careful need to change size of json_to_send depending on nb measure
 #define DELAY 20000 //1 min 
 #define TIME_HEADER  'T'   // Header tag for serial time sync message
 #define TIME_REQUEST "req"  
