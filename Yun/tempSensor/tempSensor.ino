@@ -57,6 +57,7 @@ void setup(void) {
 
 void loop()
 {
+  
   //Serial.println("waiting");
   if(rf95.available())
   {
@@ -96,10 +97,8 @@ void loop()
 
 void receive(char b[]) {
 
-  StaticJsonBuffer<250> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-  JsonArray& json = root.createNestedArray("data");
   
+
   int buffsize = 1+NB_MEASURE_PER_SEND*2; //room + NB_MEASURE_PER_SEND*(time+val)
   char* ws[buffsize];
   int index = 0 ;
@@ -110,7 +109,6 @@ void receive(char b[]) {
     split = strtok(NULL,"-");
   }
 
-
   
   int roomRcv = atoi(ws[0]);
   long etime = 0;
@@ -119,26 +117,46 @@ void receive(char b[]) {
       etime = atol(ws[i])+ LOCAL_TIME_DIFFERENCE;//for local time    
     }
     if( i % 2 == 0 && etime != 0 && strlen(ws[i]) == 5){
-      JsonObject& obj = json.createNestedObject();
-      formJson(obj,roomRcv,etime,ws[i]);
+      String json = "{\"data\":["+formJson(roomRcv,etime,ws[i])+"]}"; 
+
+           // Make a HTTP request  
+      char json_to_send[80];
+      json.toCharArray(json_to_send,sizeof(json_to_send));
+      Serial.println(String(json_to_send));
+      Serial.flush();
       
+      if(!sendData.running()){
+          digitalWrite(SENDING_LED,HIGH);
+          sendData.begin("curl");
+          sendData.addParameter("-X");
+          sendData.addParameter("POST");
+          sendData.addParameter("http://hoomieserver.herokuapp.com/temperature/addDoc");
+          sendData.addParameter("-H");
+          sendData.addParameter("Content-Type:application/json");
+          sendData.addParameter("--data");
+          sendData.addParameter(json_to_send);
+          sendData.run();
+          Serial.println("data sent to server");
+          delay(500);
+          digitalWrite(SENDING_LED, LOW);
+        }
+        
       etime = 0;
     }
   }
   
   
   digitalWrite(MEASURE_LED, HIGH);
-  JsonObject& ownObj = json.createNestedObject();
-  measureTemp(ownObj);
- 
+  String json = "{\"data\":["+measureTemp()+"]}"; 
   digitalWrite(MEASURE_LED, LOW);
-   
-  // Make a HTTP request:
-  Serial.println();
-  root.printTo(Serial);
+
+ // Make a HTTP request  
+  char json_to_send[80];
+  json.toCharArray(json_to_send,sizeof(json_to_send));
+  Serial.println(String(json_to_send));
   Serial.flush();
-  /*
-    if(!sendData.running()){
+  
+  if(!sendData.running()){
       digitalWrite(SENDING_LED,HIGH);
       sendData.begin("curl");
       sendData.addParameter("-X");
@@ -146,32 +164,30 @@ void receive(char b[]) {
       sendData.addParameter("http://hoomieserver.herokuapp.com/temperature/addDoc");
       sendData.addParameter("-H");
       sendData.addParameter("Content-Type:application/json");
-      sendData.addParameter("--data-binary");
+      sendData.addParameter("--data");
       sendData.addParameter(json_to_send);
-      Serial.println("sent");
       sendData.run();
+      Serial.println("data sent to server");
       delay(500);
       digitalWrite(SENDING_LED, LOW);
     }
 
-  */
-  
-  
+ 
 
 }
 
-void formJson(JsonObject& info,int room,long epoch,char* value){
+String formJson(int room,long epoch,char* value){
+  String tempInfo;
   time_t t = (time_t) epoch;
   String date= checkDigit(year(t))+'-'+checkDigit(month(t))+'-'+checkDigit(day(t))+'-'+checkDigit(hour(t))+'-'+checkDigit(minute(t))+'-'+checkDigit(second(t));
-  info["date"] = date;
-  info["value"] = atof(value);
-  info["room"] = room;
- 
+  tempInfo = "{\"date\":\""+date+"\",";
+  tempInfo +=  "\"value\":"+String(value)+",\"room\":"+room+"}";
+  return tempInfo;
 }
 
 
-void measureTemp(JsonObject& tempInfo){
-  String dateVal;
+String measureTemp(){
+  String dateVal,tempInfo;
 
   date.runShellCommand("echo `date +%Y-%m-%d-%H-%M-%S`");
   // do nothing until the process finishes, so you get the whole output:
@@ -183,10 +199,12 @@ void measureTemp(JsonObject& tempInfo){
     if(c!='\n') dateVal += c;
   }
   
-  tempInfo["date"] = dateVal;
+  tempInfo = "{\"date\":\""+dateVal+"\",";
   sensors.requestTemperatures();
-  tempInfo["value"] = round(sensors.getTempCByIndex(0)*100)/100;
-  tempInfo["room"] = room;
+  char tempVal[5];
+  dtostrf(sensors.getTempCByIndex(0),5,2,tempVal);
+  tempInfo +=  "\"value\":"+String(tempVal)+",\"room\":"+room+"}";
+  return tempInfo;
   
   
 }
