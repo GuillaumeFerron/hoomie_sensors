@@ -1,3 +1,5 @@
+#include <MutichannelGasSensor.h>
+#include <Wire.h>
 
 //#include <ArduinoJson.h>
 
@@ -18,9 +20,10 @@
 
 #define ROOM_NUMBER 204
 #define NB_MEASURE_PER_SEND 2 //careful need to change size of json_to_send depending on nb measure
-#define DELAY 20000 //1 min 
+#define DELAY 30000 //30sec 
 #define TIME_HEADER  'T'   // Header tag for serial time sync message
 #define TIME_REQUEST "req"  
+#define NB_BYTE_PER_MEASURE 28 //10b for date, 5 for temp, 6 for CO, 4 for NO2,3 dash 
 
 
 OneWire oneWire(ONE_WIRE_BUS);
@@ -37,7 +40,11 @@ void setup(void) {
   sensors.begin();
   pinMode(MEASURE_LED, OUTPUT);
   pinMode(SENDING_LED,OUTPUT);
-  
+  gas.begin(0x04);//the default I2C address has been changed to 0x19
+  gas.powerOn();
+  Serial.print("Firmware Version = ");
+  Serial.println(gas.getVersion());
+
 
   Serial.begin(9600);
   //while (!Serial); // wait for a serial connection
@@ -48,11 +55,11 @@ void setup(void) {
     }
   Serial.println("You're Connected");
   setSyncProvider( requestSync);  //set function to call when sync required
-  Serial.println("Waiting for sync message");
+  Serial.println("Waiting for sync message");  
   rf95.setFrequency(868.0);
   room = ROOM_NUMBER;
   dateSet = false;
-  
+ 
   
   while(!dateSet){
     if (rf95.available()) {
@@ -74,10 +81,12 @@ void setup(void) {
     }
     delay(1000);
   }
+   
 }
 
 void loop(void) {
-   int json_size = 3+NB_MEASURE_PER_SEND*(17);
+  
+   int json_size = 3+NB_MEASURE_PER_SEND*(NB_BYTE_PER_MEASURE+1);
    char json_to_send[json_size]; //size = 3+nb_measure*(16+1)+1 or 2 more
    sprintf(json_to_send,"%d",room);
    int nb_measure = 0;
@@ -85,7 +94,7 @@ void loop(void) {
   // Make a HTTP request:
   while( nb_measure < NB_MEASURE_PER_SEND ){
     digitalWrite(MEASURE_LED, HIGH);
-    sprintf(json_to_send,"%s-%s",json_to_send,measureTemp());
+    sprintf(json_to_send,"%s-%s",json_to_send,measure());
     Serial.flush();
     digitalWrite(MEASURE_LED, LOW);
     if(nb_measure != NB_MEASURE_PER_SEND-1){
@@ -139,17 +148,28 @@ void radio_error(){
      }
 }
 
-char* measureTemp(){
-  char tempInfo[16]; 
+char* measure(){
+  
+  char tempInfo[NB_BYTE_PER_MEASURE+1]; 
+  memset(tempInfo,0,sizeof(tempInfo));
   //date 
   time_t t = now(); 
   Serial.println(t);
   //temperature 
   sensors.requestTemperatures();
   char tempVal[5];
+  char coVal[5];
   dtostrf(sensors.getTempCByIndex(0),5,2,tempVal);
-  int n = sprintf(tempInfo,"%ld-%s",(long)t,tempVal);
+  //gas
+  float co = gas.measure_CO();
+  Serial.println(co);
+  int no2 =(int) floor(gas.measure_NO2()*100); //doesn't work anymore we don't know why 
+  Serial.println(no2);
+  dtostrf(co,5,2,coVal);
+    
+  int n = sprintf(tempInfo,"%ld-%s-%s-%d",(long)t,tempVal,coVal,no2);
   Serial.println(n);
+  
   return tempInfo;
   
 }

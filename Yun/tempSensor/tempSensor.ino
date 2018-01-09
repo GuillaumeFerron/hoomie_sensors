@@ -1,3 +1,5 @@
+//#include <MutichannelGasSensor.h>
+
 #include <Time.h>
 #include <TimeLib.h>
 
@@ -18,6 +20,7 @@
 #define MEASURE_LED 3
 #define ROOM_NUMBER 205
 #define NB_MEASURE_PER_SEND 2
+#define NB_FIELD_PER_MEASURE 4
 #define LOCAL_TIME_DIFFERENCE 3600
 #define DELAY 30000
 #define TIME_HEADER  'T'   // Header tag for serial time sync message
@@ -97,9 +100,7 @@ void loop()
 
 void receive(char b[]) {
 
-  
-
-  int buffsize = 1+NB_MEASURE_PER_SEND*2; //room + NB_MEASURE_PER_SEND*(time+val)
+  int buffsize = 1+NB_MEASURE_PER_SEND*NB_FIELD_PER_MEASURE ; //room + NB_MEASURE_PER_SEND*(time+temp+co+no2)
   char* ws[buffsize];
   int index = 0 ;
   char* split = strtok(b,"-");
@@ -111,41 +112,59 @@ void receive(char b[]) {
 
   
   int roomRcv = atoi(ws[0]);
+  boolean missingInfo = false;
   long etime = 0;
+  char* temp = '0';
+  char* co = '0';
   for(int i=1;i<buffsize;i++){
-    if( i % 2 == 1 && strlen(ws[i]) == 10){
-      etime = atol(ws[i])+ LOCAL_TIME_DIFFERENCE;//for local time    
-    }
-    if( i % 2 == 0 && etime != 0 && strlen(ws[i]) == 5){
-      String json = "{\"data\":["+formJson(roomRcv,etime,ws[i])+"]}"; 
+    switch(i % NB_FIELD_PER_MEASURE){
+      case 1:
+        if(strlen(ws[i]) == 10){
+          etime = atol(ws[i])+ LOCAL_TIME_DIFFERENCE;//for local time    
+        }
+        else{
+          missingInfo = true;
+        }
+        break;
+     case 2:
+        if(strlen(ws[i]) == 5 && isNumeric(ws[i]) && !missingInfo){
+          Serial.println("temp is numeric");
+           temp = ws[i];
+        }
+        else{
+          missingInfo = true;
+        }
+        break;
+     case 3:
+        if(isNumeric(ws[i]) && !missingInfo){
+          co = ws[i];   
+        }
+        else{
+          missingInfo = true;
+        }
+        break;
+      case 0:
+        if(isNumeric(ws[i])&& !missingInfo){
+           String json = "{\"data\":["+formJson(roomRcv,etime,temp,co,ws[i])+"]}"; 
 
            // Make a HTTP request  
-      char json_to_send[80];
-      json.toCharArray(json_to_send,sizeof(json_to_send));
-      Serial.println(String(json_to_send));
-      Serial.flush();
-      
-      if(!sendData.running()){
-          digitalWrite(SENDING_LED,HIGH);
-          sendData.begin("curl");
-          sendData.addParameter("-X");
-          sendData.addParameter("POST");
-          sendData.addParameter("http://hoomieserver.herokuapp.com/temperature/addDoc");
-          sendData.addParameter("-H");
-          sendData.addParameter("Content-Type:application/json");
-          sendData.addParameter("--data");
-          sendData.addParameter(json_to_send);
-          sendData.run();
-          Serial.println("data sent to server");
-          delay(500);
-          digitalWrite(SENDING_LED, LOW);
+            char json_to_send[100];
+            json.toCharArray(json_to_send,sizeof(json_to_send));
+            Serial.println(String(json_to_send));
+            Serial.flush();
+            //sendToServer(json_to_send);
+              
+            etime = 0;  
         }
+        else{
+          missingInfo = true;
+        }
+        break;
         
-      etime = 0;
     }
   }
-  
-  
+       
+      
   digitalWrite(MEASURE_LED, HIGH);
   String json = "{\"data\":["+measureTemp()+"]}"; 
   digitalWrite(MEASURE_LED, LOW);
@@ -155,7 +174,13 @@ void receive(char b[]) {
   json.toCharArray(json_to_send,sizeof(json_to_send));
   Serial.println(String(json_to_send));
   Serial.flush();
+  sendToServer(json_to_send);
   
+  
+}
+
+
+void sendToServer(char json_to_send[]){
   if(!sendData.running()){
       digitalWrite(SENDING_LED,HIGH);
       sendData.begin("curl");
@@ -171,17 +196,18 @@ void receive(char b[]) {
       delay(500);
       digitalWrite(SENDING_LED, LOW);
     }
-
- 
-
 }
 
-String formJson(int room,long epoch,char* value){
+
+String formJson(int room,long epoch,char* temp,char * co, char * no2){
   String tempInfo;
   time_t t = (time_t) epoch;
   String date= checkDigit(year(t))+'-'+checkDigit(month(t))+'-'+checkDigit(day(t))+'-'+checkDigit(hour(t))+'-'+checkDigit(minute(t))+'-'+checkDigit(second(t));
   tempInfo = "{\"date\":\""+date+"\",";
-  tempInfo +=  "\"value\":"+String(value)+",\"room\":"+room+"}";
+  float no2Val = atoi(no2)*0.01;
+  Serial.println(no2Val);
+  tempInfo +=  "\"temperature\":"+String(temp)+",\"co\":"+String(co)+",\"no2\":"+no2Val+",\"room\":"+room+"}";
+  Serial.println(tempInfo);
   return tempInfo;
 }
 
@@ -215,6 +241,32 @@ String checkDigit(int d){
     s = "0";
   return s+String(d);
   
+}
+
+boolean isNumeric(String str) {
+    unsigned int stringLength = str.length();
+ 
+    if (stringLength == 0) {
+        return false;
+    }
+ 
+    boolean seenDecimal = false;
+ 
+    for(unsigned int i = 0; i < stringLength; ++i) {
+        if (isDigit(str.charAt(i))) {
+            continue;
+        }
+ 
+        if (str.charAt(i) == '.') {
+            if (seenDecimal) {
+                return false;
+            }
+            seenDecimal = true;
+            continue;
+        }
+        return false;
+    }
+    return true;
 }
 
 String  getTimeNow(){
