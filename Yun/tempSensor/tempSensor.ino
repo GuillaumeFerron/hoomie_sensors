@@ -130,6 +130,14 @@ void receive(char b[]) {
         if(strlen(ws[i]) == 5 && isNumeric(ws[i]) && !missingInfo){
           Serial.println("temp is numeric");
            temp = ws[i];
+           String json = "{\"data\":["+formJson1Value(roomRcv,etime,temp)+"]}"; 
+
+           // Make a HTTP request  
+            char json_to_send[80];
+            json.toCharArray(json_to_send,sizeof(json_to_send));
+            Serial.println(String(json_to_send));
+            Serial.flush();
+            sendToServer(json_to_send,"addTemp");
         }
         else{
           missingInfo = true;
@@ -145,14 +153,14 @@ void receive(char b[]) {
         break;
       case 0:
         if(isNumeric(ws[i])&& !missingInfo){
-           String json = "{\"data\":["+formJson(roomRcv,etime,temp,co,ws[i])+"]}"; 
+           String json = "{\"data\":["+formJson2Values(roomRcv,etime,co,ws[i])+"]}"; 
 
            // Make a HTTP request  
-            char json_to_send[100];
+            char json_to_send[90];
             json.toCharArray(json_to_send,sizeof(json_to_send));
             Serial.println(String(json_to_send));
             Serial.flush();
-            //sendToServer(json_to_send);
+            sendToServer(json_to_send,"addAtmos");
               
             etime = 0;  
         }
@@ -174,19 +182,19 @@ void receive(char b[]) {
   json.toCharArray(json_to_send,sizeof(json_to_send));
   Serial.println(String(json_to_send));
   Serial.flush();
-  sendToServer(json_to_send);
+  sendToServer(json_to_send,"addTemp");
   
   
 }
 
 
-void sendToServer(char json_to_send[]){
+void sendToServer(char json_to_send[],String route){
   if(!sendData.running()){
       digitalWrite(SENDING_LED,HIGH);
       sendData.begin("curl");
       sendData.addParameter("-X");
       sendData.addParameter("POST");
-      sendData.addParameter("http://hoomieserver.herokuapp.com/temperature/addDoc");
+      sendData.addParameter("http://hoomieserver.herokuapp.com/sensors/"+route);
       sendData.addParameter("-H");
       sendData.addParameter("Content-Type:application/json");
       sendData.addParameter("--data");
@@ -199,15 +207,25 @@ void sendToServer(char json_to_send[]){
 }
 
 
-String formJson(int room,long epoch,char* temp,char * co, char * no2){
+String formJson1Value(int room,long epoch,char* temp){
+  String tempInfo;
+  time_t t = (time_t) epoch;
+  String date= checkDigit(year(t))+'-'+checkDigit(month(t))+'-'+checkDigit(day(t))+'-'+checkDigit(hour(t))+'-'+checkDigit(minute(t))+'-'+checkDigit(second(t));
+  tempInfo = "{\"date\":\""+date+"\",";
+  tempInfo +=  "\"value\":"+String(temp)+",\"room\":"+room+"}";
+  return tempInfo;
+}
+
+
+String formJson2Values(int room,long epoch,char* co,char* no2){
   String tempInfo;
   time_t t = (time_t) epoch;
   String date= checkDigit(year(t))+'-'+checkDigit(month(t))+'-'+checkDigit(day(t))+'-'+checkDigit(hour(t))+'-'+checkDigit(minute(t))+'-'+checkDigit(second(t));
   tempInfo = "{\"date\":\""+date+"\",";
   float no2Val = atoi(no2)*0.01;
   Serial.println(no2Val);
-  tempInfo +=  "\"temperature\":"+String(temp)+",\"co\":"+String(co)+",\"no2\":"+no2Val+",\"room\":"+room+"}";
-  Serial.println(tempInfo);
+  tempInfo +=  "\"co\":"+String(co)+",\"no2\":"+no2Val+",\"room\":"+room+"}";
+  //Serial.println(tempInfo);
   return tempInfo;
 }
 
